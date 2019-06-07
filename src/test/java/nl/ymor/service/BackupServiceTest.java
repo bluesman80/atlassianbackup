@@ -57,21 +57,21 @@ public class BackupServiceTest {
     @InjectMocks
     private BackupService instance;
 
-    // get Logback Logger (will be used to assert logs)
+    // Get Logback Logger (will be used to assert logs)
     private final Logger backupServiceLogger = (Logger) LoggerFactory.getLogger(BackupService.class);
-    // create a ListAppender
+    // Create a ListAppender
     private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 
     @Before
     public void setup() throws UnirestException {
-        // init mocks
+        // Initialize mocks
         MockitoAnnotations.initMocks(this);
+
         when(restClient.doProgressCheckRequest(anyString())).thenReturn(httpResponse);
 
-        // start the ListAppender
+        // Start the ListAppender
         listAppender.start();
-
-        // add the appender to the logger
+        // Add the appender to the logger
         backupServiceLogger.addAppender(listAppender);
     }
 
