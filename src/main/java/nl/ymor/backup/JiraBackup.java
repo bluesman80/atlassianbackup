@@ -75,7 +75,7 @@ public class JiraBackup implements CommandLineRunner {
             }
         } catch (final UnirestException | InterruptedException e) {
             LOG.error("Error processing request: ", e);
-        } catch (final IOException e) {
+        } catch (final IOException e) { // This one only comes from the downloadBackupFile method
             LOG.error("Cannot save backup archive due to IOException: ", e);
         }
 

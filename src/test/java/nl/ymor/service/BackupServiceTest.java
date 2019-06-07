@@ -25,11 +25,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("test")
 @ContextConfiguration(classes = TestConfiguration.class,
@@ -47,10 +49,22 @@ public class BackupServiceTest {
     @InjectMocks
     private BackupService instance;
 
+    // get Logback Logger (will be used to assert logs)
+    private final Logger backupServiceLogger = (Logger) LoggerFactory.getLogger(BackupService.class);
+    // create a ListAppender
+    private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+
     @Before
-    public void initMocks() throws UnirestException {
+    public void setup() throws UnirestException {
+        // init mocks
         MockitoAnnotations.initMocks(this);
         when(restClient.doProgressCheckRequest(anyString())).thenReturn(httpResponse);
+
+        // start the ListAppender
+        listAppender.start();
+
+        // add the appender to the logger
+        backupServiceLogger.addAppender(listAppender);
     }
 
     @Test
@@ -61,16 +75,6 @@ public class BackupServiceTest {
 
     @Test
     public void shouldGetBackupFileUrlByRequestingProgressTwice() throws UnirestException, InterruptedException {
-        // get Logback Logger
-        Logger fooLogger = (Logger) LoggerFactory.getLogger(BackupService.class);
-
-        // create and start a ListAppender
-        ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
-        listAppender.start();
-
-        // add the appender to the logger
-        fooLogger.addAppender(listAppender);
-
         final String backupFileURL = "export/download/?fileId=11f959da-1c70-4519-8e6f-633748f7b832";
 
         final JsonNode progressResponseIncomplete =
@@ -90,6 +94,7 @@ public class BackupServiceTest {
         assertThat(backupFileURLOptional).isNotEmpty();
         assertThat(backupFileURLOptional.get()).isEqualTo(backupFileURL);
 
+        // assert the log messages
         List<ILoggingEvent> logsList = listAppender.list;
         assertThat(logsList.get(0).getLevel()).isEqualTo(Level.INFO);
         assertThat(logsList.get(0).getFormattedMessage()).contains("Backup progress: 0");
@@ -97,7 +102,37 @@ public class BackupServiceTest {
         assertThat(logsList.get(1).getFormattedMessage()).contains("Backup progress: 100");
         assertThat(logsList.get(2).getLevel()).isEqualTo(Level.INFO);
         assertThat(logsList.get(2).getFormattedMessage()).contains("Backup finished successfully.");
+    }
 
+    @Test
+    public void shouldGetAnEmptyBackupFileUrlDueToInsufficientProgressCheckNumber() throws UnirestException,
+            InterruptedException {
+        final JsonNode progressResponseIncomplete =
+                new JsonNode("{\"status\":\"InProgress\",\"description\":\"Cloud Export task\"," +
+                        "\"message\":\"Preparing database for export (it may take up to 30 minutes)\"," +
+                        "\"progress\":0}");
+
+        when(httpResponse.getStatus()).thenReturn(200);
+        when(httpResponse.getBody()).thenReturn(progressResponseIncomplete);
+
+        Optional<String> backupFileURLOptional = instance.getBackupFileUrl(instance.KEY_TASK_ID);
+
+        assertThat(backupFileURLOptional).isEmpty();
+
+        // assert the log messages
+        List<ILoggingEvent> logsList = listAppender.list;
+        assertThat(logsList.get(0).getLevel()).isEqualTo(Level.INFO);
+        assertThat(logsList.get(0).getFormattedMessage()).contains("Backup progress: 0");
+        assertThat(logsList.get(1).getLevel()).isEqualTo(Level.INFO);
+        assertThat(logsList.get(1).getFormattedMessage()).contains("Backup progress: 0");
+    }
+
+    @Test(expected = UnirestException.class)
+    public void shouldFailBackupFileUrlDueToServerResponse() throws InterruptedException, UnirestException {
+        when(httpResponse.getStatus()).thenReturn(500);
+        when(httpResponse.getBody()).thenReturn(new JsonNode(""));
+
+        instance.getBackupFileUrl(instance.KEY_TASK_ID);
     }
 
     @Test
