@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -28,7 +29,7 @@ public class BackupService {
     private static final String CHECK_PROGRESS_ENDPOINT = "https://%s/rest/backup/1/export/getProgress?taskId=%s";
 
     @Value("${archive.file.name.extension}")
-    private String archiveFileName;
+    protected String archiveFileName;
     @Value("${maximum.progress.check.times}")
     protected String progressChecks;
     @Value("${pause.milliseconds.between.progress.checks}")
@@ -45,7 +46,13 @@ public class BackupService {
         this.restClient = restClient;
     }
 
-    public boolean areArgumentsValid(final String... args) {
+    /**
+     * Validate and set the arguments
+     *
+     * @param args Program arguments
+     * @return true if arguments are valid
+     */
+    public boolean setArguments(final String... args) {
         final JCommander argumentParser = JCommander.newBuilder().addObject(arguments).build();
 
         try {
@@ -78,7 +85,7 @@ public class BackupService {
             final HttpResponse<JsonNode> progressResponse = restClient.doProgressCheckRequest(progressCheckUrl);
             final JSONObject responseBody = progressResponse.getBody().getObject();
 
-            if (progressResponse.getStatus() == 200 && responseBody.has(KEY_PROGRESS)) {
+            if (progressResponse.getStatus() == HttpURLConnection.HTTP_OK && responseBody.has(KEY_PROGRESS)) {
                 progressPercentage =
                         Integer.valueOf(responseBody.get(KEY_PROGRESS).toString());
 
@@ -108,7 +115,7 @@ public class BackupService {
         LOG.info("Downloading now: {} (this may take a while)", backupFilePartialURL);
         final HttpResponse<InputStream> downloadRequest = restClient.doDownloadRequest(backupFilePartialURL, instance);
 
-        if (downloadRequest.getStatus() == 200) {
+        if (downloadRequest.getStatus() == HttpURLConnection.HTTP_OK) {
             LOG.info("Downloaded the backup file. Saving to {}", downloadDirectory);
 
             final InputStream inputStream = downloadRequest.getRawBody();

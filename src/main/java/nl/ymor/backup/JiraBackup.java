@@ -40,7 +40,7 @@ public class JiraBackup implements CommandLineRunner {
     @SuppressWarnings("squid:S2142")
     @Override
     public void run(String... args) {
-        if (!backupService.areArgumentsValid(args)) exit(1);
+        if (!backupService.setArguments(args)) exit(1);
 
         boolean isBackupSuccessful = false;
         // Save the start time

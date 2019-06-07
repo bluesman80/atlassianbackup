@@ -26,7 +26,7 @@ public class Arguments {
         return user;
     }
 
-    void setUser(final String user) {
+    public void setUser(final String user) {
         this.user = user;
     }
 
@@ -34,7 +34,7 @@ public class Arguments {
         return apiToken;
     }
 
-    void setApiToken(final String apiToken) {
+    public void setApiToken(final String apiToken) {
         this.apiToken = apiToken;
     }
 
@@ -42,7 +42,7 @@ public class Arguments {
         return instanceUrl;
     }
 
-    void setInstanceUrl(final String instanceUrl) {
+    public void setInstanceUrl(final String instanceUrl) {
         this.instanceUrl = instanceUrl;
     }
 
@@ -50,7 +50,7 @@ public class Arguments {
         return directory;
     }
 
-    void setDirectory(final String directory) {
+    public void setDirectory(final String directory) {
         this.directory = directory;
     }
 
