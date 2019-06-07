@@ -189,7 +189,7 @@ public class BackupServiceTest {
 
         instance.downloadBackupFile("partial/URL/Of/The/Backup/File/To/Download");
 
-        assertThat(path.toFile()).exists().isFile();
+        assertThat(path.toFile()).exists().isFile().hasExtension("zip");
     }
 
     @Test(expected = UnirestException.class)
