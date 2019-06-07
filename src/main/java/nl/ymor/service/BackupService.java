@@ -19,6 +19,11 @@ import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.TextStyle;
+import java.util.Locale;
 import java.util.Optional;
 
 @SuppressWarnings({"squid:S1192", "squid:S00116", "squid:S1170"})
@@ -34,12 +39,14 @@ public class BackupService {
     protected String progressChecks;
     @Value("${pause.milliseconds.between.progress.checks}")
     protected String sleepTimeMillis;
+    private final ZoneId TIME_ZONE = ZoneId.systemDefault();
 
     private static final String KEY_PROGRESS = "progress";
     private static final String KEY_BACKUP_FILE_URL = "result";
     public final String KEY_TASK_ID = "taskId";
     private Arguments arguments;
     private RestClient restClient;
+    private Instant startTime;
 
     public BackupService(final Arguments arguments, final RestClient restClient) {
         this.arguments = arguments;
@@ -71,6 +78,13 @@ public class BackupService {
     }
 
     public HttpResponse<String> requestBackup() throws UnirestException {
+        // Save the start time
+        startTime = Instant.now();
+
+        LOG.info("Starting the backup script. Start date-time: {} {}",
+                startTime.atZone(TIME_ZONE).toLocalDateTime(),
+                TIME_ZONE.getDisplayName(TextStyle.SHORT, Locale.ENGLISH));
+
         return restClient.doBackupRequest();
     }
 
@@ -128,6 +142,13 @@ public class BackupService {
             throw new UnirestException(String.format("Cannot download file: %s%nDownload response: %s",
                     backupFilePartialURL, downloadRequest.getStatus()));
         }
+
+        // Log the result with duration
+        final Instant endTime = Instant.now();
+        LOG.info("Backup job succeeded on {} {} and it took {} seconds",
+                endTime.atZone(TIME_ZONE).toLocalDateTime(),
+                TIME_ZONE.getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
+                Duration.between(startTime, endTime));
     }
 
 }
