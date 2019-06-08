@@ -7,3 +7,4 @@ logs/
 .idea/
 .editorconfig
 /src/test/data/*
+.DS_Store
