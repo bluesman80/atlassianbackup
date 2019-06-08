@@ -14,9 +14,9 @@ public class Arguments {
     private String apiToken;
 
     @Parameter(names = {"-i", "--instance"}, description = "Jira instance URL")
-    private String instanceUrl = "userhappiness.atlassian.net";
+    private String instanceUrl;
 
-    @Parameter(names = {"-d", "--dir"}, description = "Directory path to save the downloaded backup file")
+    @Parameter(names = {"-d", "--dir"}, description = "Directory path to save the downloaded backup file (optional)")
     private String directory = ".";
 
     @Parameter(hidden = true)

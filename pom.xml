@@ -22,6 +22,7 @@
         <json.version>20180813</json.version>
         <jcommander.version>1.72</jcommander.version>
         <commons-io.version>2.6</commons-io.version>
+        <system-rules.version>1.19.0</system-rules.version>
     </properties>
 
     <build>
@@ -99,6 +100,12 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons-io.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.stefanbirkner</groupId>
+            <artifactId>system-rules</artifactId>
+            <version>${system-rules.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

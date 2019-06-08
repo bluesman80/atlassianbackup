@@ -47,7 +47,7 @@ public class BackupServiceTest {
     @Mock(answer = Answers.RETURNS_MOCKS)
     private RestClient restClient;
 
-    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    @Mock
     private HttpResponse<JsonNode> httpResponse;
 
     @Mock
@@ -93,7 +93,7 @@ public class BackupServiceTest {
 
         Optional<String> backupFileURLOptional = instance.getBackupFileUrl(instance.KEY_TASK_ID);
 
-        assertThat(backupFileURLOptional).isPresent().isEqualTo(backupFileURL);
+        assertThat(backupFileURLOptional).isPresent().get().isEqualTo(backupFileURL);
 
         // assert the log messages
         List<ILoggingEvent> logsList = listAppender.list;
